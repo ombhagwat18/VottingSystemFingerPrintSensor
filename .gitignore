@@ -5,3 +5,4 @@ build/
 __pycache__/
 voting_data.json
 voting_log.txt
+tools/

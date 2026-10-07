@@ -38,6 +38,12 @@ There is also an older **split design** (`legacy/`) where a laptop holds the dat
 
 ## 🚀 Quick start
 
+### ⚡ One-click (Windows)
+
+Double-click **`setup.bat`**. It installs `arduino-cli`, the ESP8266 core 3.1.2 and the fingerprint library, asks for your WiFi, admin and SMS details and writes `secrets.h`, compiles, uploads to the board you pick, then opens the console and the setup guide. It is safe to re-run; finished steps are skipped.
+
+### Manual steps
+
 1. **Install** the Arduino IDE, the *ESP8266 core 3.x*, and the library **Adafruit Fingerprint Sensor Library**.
 2. **Board settings:** `NodeMCU 1.0 (ESP-12E)`, Flash size `4MB (FS:1MB OTA:~1019KB)`.
 3. **Secrets:** copy `secrets.example.h` to `secrets.h` and fill in WiFi, admin login, SMS key and admin phone. `secrets.h` is git-ignored.
@@ -183,6 +189,8 @@ Diagram: [`docs/wiring.svg`](docs/wiring.svg)
 │   ├── wiring.svg
 │   ├── circuitdigest-setup.html   open in a browser
 │   └── screenshots/
+├── scripts/make-secrets.ps1   helper used by setup.bat
+├── setup.bat                  one-click installer (Windows)
 ├── README.md · CLAUDE.md · .gitignore
 ```
 
