@@ -10,7 +10,7 @@
 ![RAM](https://img.shields.io/badge/static%20RAM-55%25-6366f1?style=for-the-badge)
 ![Core](https://img.shields.io/badge/ESP8266%20core-3.1.2-0f2447?style=for-the-badge)
 
-[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Wiring](#-wiring) · [Memory](#-why-memory-looks-full) · [SMS troubleshooting](#-why-the-sms-does-not-reach-a-voter) · [API](#-json-api) · [Roadmap](#-roadmap)
+[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Wiring](#-wiring) · [Memory](#-why-memory-looks-full) · [SMS setup](#-circuitdigest-sms-setup) · [SMS troubleshooting](#-why-the-sms-does-not-reach-a-voter) · [API](#-json-api) · [Roadmap](#-roadmap)
 
 <img src="ui_preview/ui_dash.png" alt="Admin console dashboard" width="760">
 
@@ -173,6 +173,8 @@ Diagram: [`wiring.svg`](wiring.svg)
 | [`types.h`](types.h) | `SmsJob`, `SmsStatus`, `EnrStep` (needed before the auto-generated prototypes) |
 | [`webui.h`](webui.h) | Whole console as one PROGMEM string (served from flash, not RAM) |
 | [`secrets.example.h`](secrets.example.h) | Template for credentials. Copy to `secrets.h` |
+| `secrets.h` | Your real credentials. **Git-ignored, never commit it** |
+| [`wiring.svg`](wiring.svg), [`ui_preview/`](ui_preview) | Wiring diagram and console screenshots |
 | [`voting_bridge/`](voting_bridge/voting_bridge.ino), [`voting_station.py`](voting_station.py) | Older split design (serial bridge + Tkinter app) |
 | [`CLAUDE.md`](CLAUDE.md) | Notes for AI assistants working in this repo |
 
@@ -237,6 +239,49 @@ The ESP8266 is a microcontroller with about **80 KB of data RAM**, shared by you
 - Watch **Settings → System → Free heap / Largest block / Fragmentation** while using the console. If the largest block stays below 9 KB, SMS will wait.
 
 </details>
+
+---
+
+## 📲 CircuitDigest SMS setup
+
+<details open>
+<summary>▶ Six steps from account to first SMS</summary>
+
+1. Create an account at [circuitdigest.cloud](https://www.circuitdigest.cloud).
+2. Copy your **API key** (account menu, API Key section).
+3. **Link the phone numbers** that will receive SMS (free plan: up to 5). Include the admin number and any voter you want to test with.
+4. Copy `secrets.example.h` to `secrets.h` and set `SMS_API_KEY` and `DEFAULT_ADMIN_PHONE` (country code first, for example `91XXXXXXXXXX`).
+5. Upload the sketch, open the console, go to **Settings → SMS**, switch SMS on and enter the admin phone.
+6. Go to the **SMS** tab and press **Send test**. The row should show `sent` with HTTP `200`.
+
+</details>
+
+<details>
+<summary>▶ Test the key from a terminal before uploading</summary>
+
+```bash
+curl -X POST "https://www.circuitdigest.cloud/api/v1/send_sms?ID=101" \
+  -H "Authorization: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"mobiles":"91XXXXXXXXXX","var1":"SMS test","var2":"OK"}'
+```
+
+</details>
+
+| Limit (free plan) | Value |
+|---|---|
+| SMS per month | 100 |
+| Linked numbers | 5 |
+| Characters per variable | 30 |
+| Countries | India only (prefix 91) |
+
+| Template | Used for | Text |
+|---|---|---|
+| 111 | Voter registered or voted | The task {var1} has been successfully completed at {var2}. |
+| 101 | Admin per vote, tests | Your {var1} is currently at {var2}. |
+| 107 | Admin alert | Error {var1} has been detected in {var2}. |
+
+Source: [CircuitDigest SMS API article](https://circuitdigest.com/article/free-sms-api-for-arduino-esp32-esp8266-nodemcu-raspberry-pi). Limits can change, so check your account page.
 
 ---
 
