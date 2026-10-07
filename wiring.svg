@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 760" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1100" height="760" fill="#f4f8ff"/>
+<text x="550" y="34" text-anchor="middle" font-size="24" font-weight="700" fill="#14325c">Fingerprint Voting System - Wiring (NodeMCU ESP8266)</text>
+
+<!-- NodeMCU -->
+<rect x="440" y="70" width="220" height="560" rx="14" fill="#1d3557" stroke="#0b1f3a" stroke-width="3"/>
+<text x="550" y="100" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">NodeMCU v1.0</text>
+<text x="550" y="120" text-anchor="middle" font-size="12" fill="#bcd">(USB at the bottom)</text>
+<rect x="505" y="595" width="90" height="35" rx="4" fill="#9aa5b1"/><text x="550" y="618" text-anchor="middle" font-size="12" fill="#111">micro-USB 5V 1A+</text>
+
+<!-- left pins -->
+<g font-size="14" fill="#fff">
+<text x="452" y="160">VIN (5V)</text><circle cx="440" cy="155" r="5" fill="#e63946"/>
+<text x="452" y="200">3V3</text><circle cx="440" cy="195" r="5" fill="#f4a261"/>
+<text x="452" y="240">GND</text><circle cx="440" cy="235" r="5" fill="#111" stroke="#fff"/>
+<text x="452" y="300">D1 (GPIO5)</text><circle cx="440" cy="295" r="5" fill="#2a9d8f"/>
+<text x="452" y="340">D2 (GPIO4)</text><circle cx="440" cy="335" r="5" fill="#e9c46a"/>
+<text x="452" y="400">D3 (GPIO0)</text><circle cx="440" cy="395" r="5" fill="#8338ec"/>
+<text x="452" y="440">D4 (GPIO2)</text><circle cx="440" cy="435" r="5" fill="#ff8fab"/>
+</g>
+<!-- right pins -->
+<g font-size="14" fill="#fff" text-anchor="end">
+<text x="648" y="160">D0 (GPIO16)</text><circle cx="660" cy="155" r="5" fill="#fb8500"/>
+<text x="648" y="200">D5 (GPIO14)</text><circle cx="660" cy="195" r="5" fill="#06d6a0"/>
+<text x="648" y="240">D6 (GPIO12)</text><circle cx="660" cy="235" r="5" fill="#06d6a0"/>
+<text x="648" y="280">D7 (GPIO13)</text><circle cx="660" cy="275" r="5" fill="#06d6a0"/>
+<text x="648" y="320">D8 (GPIO15)</text><circle cx="660" cy="315" r="5" fill="#06d6a0"/>
+<text x="648" y="360">3V3 (buttons)</text><circle cx="660" cy="355" r="5" fill="#f4a261"/>
+<text x="648" y="400">GND</text><circle cx="660" cy="395" r="5" fill="#111" stroke="#fff"/>
+</g>
+
+<!-- Fingerprint sensor -->
+<rect x="40" y="110" width="250" height="250" rx="12" fill="#fff" stroke="#14325c" stroke-width="2.5"/>
+<text x="165" y="138" text-anchor="middle" font-size="17" font-weight="700" fill="#14325c">R307 / R305 Fingerprint</text>
+<g font-size="14" fill="#14325c">
+<circle cx="290" cy="170" r="5" fill="#e63946"/><text x="50" y="175">VCC (red) - needs 5V</text>
+<circle cx="290" cy="220" r="5" fill="#111"/><text x="50" y="225">GND (black)</text>
+<circle cx="290" cy="270" r="5" fill="#2a9d8f"/><text x="50" y="275">TX (yellow/green) - sensor OUT</text>
+<circle cx="290" cy="320" r="5" fill="#e9c46a"/><text x="50" y="325">RX (white/blue) - sensor IN</text>
+</g>
+<!-- sensor wires -->
+<g fill="none" stroke-width="3.5">
+<path d="M290 170 H370 V155 H440" stroke="#e63946"/>
+<path d="M290 220 H350 V235 H440" stroke="#111"/>
+<path d="M290 270 H400 V295 H440" stroke="#2a9d8f"/>
+<path d="M290 320 H410 V335 H440" stroke="#e9c46a"/>
+</g>
+<text x="170" y="385" text-anchor="middle" font-size="13" fill="#b00020" font-weight="700">TX goes to D1, RX goes to D2 (not crossed twice!)</text>
+<text x="170" y="403" text-anchor="middle" font-size="12" fill="#444">(code auto-swaps if you got it backwards)</text>
+
+<!-- LCD -->
+<rect x="40" y="440" width="250" height="150" rx="12" fill="#fff" stroke="#14325c" stroke-width="2.5"/>
+<text x="165" y="468" text-anchor="middle" font-size="17" font-weight="700" fill="#14325c">LCD 16x2 + I2C backpack</text>
+<g font-size="14" fill="#14325c">
+<circle cx="290" cy="490" r="5" fill="#e63946"/><text x="50" y="495">VCC - 5V (VIN)</text>
+<circle cx="290" cy="520" r="5" fill="#111"/><text x="50" y="525">GND</text>
+<circle cx="290" cy="550" r="5" fill="#8338ec"/><text x="50" y="555">SDA</text>
+<circle cx="290" cy="580" r="5" fill="#ff8fab"/><text x="50" y="585">SCL</text>
+</g>
+<g fill="none" stroke-width="3.5">
+<path d="M290 490 H330 V150 H440" stroke="#e63946" stroke-dasharray="0"/>
+<path d="M290 520 H340 V240 H440" stroke="#111"/>
+<path d="M290 550 H420 V395 H440" stroke="#8338ec"/>
+<path d="M290 580 H430 V435 H440" stroke="#ff8fab"/>
+</g>
+
+<!-- Buzzer -->
+<rect x="800" y="110" width="250" height="90" rx="12" fill="#fff" stroke="#14325c" stroke-width="2.5"/>
+<text x="925" y="138" text-anchor="middle" font-size="16" font-weight="700" fill="#14325c">Active buzzer</text>
+<text x="810" y="165" font-size="14" fill="#14325c">+ leg -> D0</text><text x="810" y="187" font-size="14" fill="#14325c">- leg -> GND</text>
+<path d="M660 155 H760 V160 H800" fill="none" stroke="#fb8500" stroke-width="3.5"/>
+
+<!-- Buttons -->
+<rect x="800" y="230" width="250" height="260" rx="12" fill="#fff" stroke="#14325c" stroke-width="2.5"/>
+<text x="925" y="258" text-anchor="middle" font-size="16" font-weight="700" fill="#14325c">4 vote buttons</text>
+<g font-size="13" fill="#14325c">
+<text x="812" y="290">BTN1: D5 pin ---- 3V3</text>
+<text x="812" y="320">BTN2: D6 pin ---- 3V3</text>
+<text x="812" y="350">BTN3: D7 pin ---- 3V3</text>
+<text x="812" y="380">BTN4: D8 pin ---- 3V3</text>
+<text x="812" y="415" font-weight="700">Each of D5-D8 also needs a</text>
+<text x="812" y="433" font-weight="700">10k resistor from the pin to GND</text>
+<text x="812" y="455">(button pressed = pin connected to 3V3)</text>
+</g>
+<path d="M660 195 H780 V285 H800" fill="none" stroke="#06d6a0" stroke-width="3"/>
+<path d="M660 235 H770 V315 H800" fill="none" stroke="#06d6a0" stroke-width="3"/>
+<path d="M660 275 H760 V345 H800" fill="none" stroke="#06d6a0" stroke-width="3"/>
+<path d="M660 315 H750 V375 H800" fill="none" stroke="#06d6a0" stroke-width="3"/>
+
+<!-- power box -->
+<rect x="430" y="660" width="420" height="80" rx="10" fill="#fff4e0" stroke="#e76f51" stroke-width="2"/>
+<text x="445" y="685" font-size="14" font-weight="700" fill="#9c3d12">POWER</text>
+<text x="445" y="705" font-size="13" fill="#333">Use a 5V 1-2A phone charger on the NodeMCU USB (laptop USB is marginal).</text>
+<text x="445" y="724" font-size="13" fill="#333">Sensor + LCD take 5V from VIN. All GNDs must be joined together.</text>
+</svg>
