@@ -1,0 +1,191 @@
+<title>CircuitDigest SMS Setup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Manrope:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: blue header, setup checklist beside a live request builder, then limits and error table. Single blue-and-white look by choice. */
+:root{
+  --bg:#f2f7ff; --card:#ffffff; --ink:#0f2447; --mut:#52668a; --line:#dce7f8;
+  --blue:#1d6fe8; --blue2:#2f8cff; --deep:#1558c8; --tint:#e8f1ff;
+  --ok:#0e8f5f; --warn:#b97100; --err:#d23b40;
+  --display:'Sora',system-ui,sans-serif; --body:'Manrope',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;padding-inline:16px;padding-block:0 48px}
+header{background:linear-gradient(135deg,var(--deep),var(--blue2));color:#fff;margin-inline:-16px;padding:22px 16px 18px;box-shadow:0 2px 14px rgba(21,88,200,.25)}
+.in,.wrap{max-width:1040px;margin:0 auto}
+h1{font-family:var(--display);font-size:1.5rem;line-height:1.2;margin:0;text-wrap:balance}
+header p{margin:4px 0 0;opacity:.88;font-size:.92rem}
+h2{font-family:var(--display);font-size:1.15rem;margin:0 0 8px}
+h3{font-family:var(--display);font-size:.95rem;margin:0 0 4px}
+p{margin:0 0 10px;max-width:68ch}
+.wrap{padding-top:20px;display:grid;gap:16px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 4px 18px rgba(29,111,232,.08);min-width:0}
+.mono,code,pre,input,select{font-family:var(--mono)}
+code{font-size:.82em;background:var(--tint);padding:1px 6px;border-radius:5px}
+.prog{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.track{flex:1;height:10px;background:var(--tint);border-radius:5px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--blue);border-radius:5px}
+@media(prefers-reduced-motion:no-preference){.fill{transition:width .3s}}
+ol.steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+ol.steps li{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+ol.steps li.done{background:var(--tint)}
+ol.steps input{width:20px;height:20px;accent-color:var(--blue);margin-top:3px}
+ol.steps label{cursor:pointer;display:block}
+ol.steps small{display:block;color:var(--mut);margin-top:2px}
+.field{display:grid;gap:4px;margin-bottom:12px}
+.field label{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+input[type=text],input[type=tel],select{font-size:.88rem;border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--card);color:var(--ink);width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--blue2);outline-offset:2px}
+.hint{font-size:.78rem;color:var(--mut)}
+.hint.bad{color:var(--err);font-weight:700}.hint.ok{color:var(--ok);font-weight:700}
+.tabs{display:flex;gap:6px;margin-block:4px 8px;flex-wrap:wrap}
+.tabs button{font:700 .8rem var(--body);border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+pre{margin:0;background:#0f2447;color:#e8f1ff;border-radius:10px;padding:14px;font-size:.78rem;line-height:1.55;overflow-x:auto;white-space:pre}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{font:700 .85rem var(--body);background:var(--blue);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer}
+.btn:hover{background:var(--deep)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+tr.sel td{background:var(--tint)}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:99px;background:var(--tint);color:var(--deep)}
+.tag.bad{background:#fdecec;color:var(--err)}.tag.w{background:#fdf2dc;color:var(--warn)}
+.limits{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.limits div{border:1px solid var(--line);border-radius:10px;padding:12px}
+.limits b{font-family:var(--display);font-size:1.5rem;color:var(--blue);display:block;line-height:1.2}
+.limits span{font-size:.8rem;color:var(--mut)}
+.note{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.88rem}
+a{color:var(--blue);font-weight:700}
+</style>
+
+<header><div class="in">
+  <h1>CircuitDigest SMS Setup</h1>
+  <p>Get an API key, link phone numbers, and connect the voting station in six steps.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="two">
+    <section class="card" aria-labelledby="h-steps">
+      <h2 id="h-steps">Setup checklist</h2>
+      <div class="prog"><div class="track"><div class="fill" id="pf"></div></div><span class="mono" id="pt">0 / 6</span></div>
+      <ol class="steps" id="steps"></ol>
+    </section>
+
+    <section class="card" aria-labelledby="h-build">
+      <h2 id="h-build">Request builder</h2>
+      <p>Fill in your values. The page checks them against the API rules and writes the code for you. Nothing leaves this page.</p>
+      <div class="field"><label for="key">API key</label><input type="text" id="key" placeholder="paste your key here" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="ph">Mobile number (India)</label><input type="tel" id="ph" value="98765 43210" inputmode="numeric"><span class="hint" id="phh"></span></div>
+      <div class="field"><label for="tpl">Template</label><select id="tpl"></select><span class="hint" id="tplh"></span></div>
+      <div class="field"><label for="v1">var1</label><input type="text" id="v1" value="Your vote" maxlength="60"><span class="hint" id="v1h"></span></div>
+      <div class="field"><label for="v2">var2</label><input type="text" id="v2" value="Voting Booth 1 08-Oct 10:00" maxlength="60"><span class="hint" id="v2h"></span></div>
+      <div class="tabs" id="out-tabs" role="group" aria-label="Output format">
+        <button type="button" data-o="curl" aria-pressed="true">curl test</button>
+        <button type="button" data-o="secrets" aria-pressed="false">secrets.h</button>
+        <button type="button" data-o="body" aria-pressed="false">JSON body</button>
+      </div>
+      <pre id="out" tabindex="0"></pre>
+      <div class="row"><button class="btn" type="button" id="copy">Copy</button><span class="hint" id="copied" role="status"></span></div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="h-lim">
+    <h2 id="h-lim">Free plan limits</h2>
+    <div class="limits">
+      <div><b>100</b><span>SMS per month, resets monthly</span></div>
+      <div><b>5</b><span>phone numbers linked per account</span></div>
+      <div><b>30</b><span>characters per variable</span></div>
+      <div><b>India</b><span>numbers only, prefix 91</span></div>
+    </div>
+    <div class="note" style="margin-top:12px">Per voter the firmware can send up to 3 messages: registration, the voter's vote receipt, and the admin notice. Turn off the ones you do not need in the console under Settings, SMS.</div>
+  </section>
+
+  <div class="two">
+    <section class="card" aria-labelledby="h-tpl">
+      <h2 id="h-tpl">Templates this project uses</h2>
+      <div class="scroll"><table id="ttab">
+        <tr><th>ID</th><th>Used for</th><th>Text</th></tr>
+        <tr data-id="111"><td class="mono">111</td><td>Voter, registered or voted</td><td>The task {var1} has been successfully completed at {var2}.</td></tr>
+        <tr data-id="101"><td class="mono">101</td><td>Admin, each vote and tests</td><td>Your {var1} is currently at {var2}.</td></tr>
+        <tr data-id="107"><td class="mono">107</td><td>Admin alert</td><td>Error {var1} has been detected in {var2}.</td></tr>
+      </table></div>
+      <p class="hint" style="margin-top:8px">CircuitDigest offers 15 templates (101 to 115). To change wording, edit <code>smsOnVote</code>, <code>smsOnRegister</code> and <code>smsAlert</code> in the sketch.</p>
+    </section>
+
+    <section class="card" aria-labelledby="h-err">
+      <h2 id="h-err">If it fails</h2>
+      <div class="scroll"><table>
+        <tr><th>Code</th><th>Meaning</th><th>Fix</th></tr>
+        <tr><td><span class="tag bad">401</span></td><td>API key missing or wrong</td><td>Copy the key again into <code>secrets.h</code> and re-upload</td></tr>
+        <tr><td><span class="tag bad">403</span></td><td>Request limit reached</td><td>Wait for the monthly reset, or save quota</td></tr>
+        <tr><td><span class="tag w">400</span></td><td>Missing or rejected field</td><td>Check number, template ID and variable length</td></tr>
+        <tr><td><span class="tag w">-1, -5</span></td><td>Connection or TLS failed</td><td>Check WiFi and the free-heap numbers in the console</td></tr>
+      </table></div>
+      <p class="hint" style="margin-top:8px">The console's SMS tab shows the code and last response for every message.</p>
+    </section>
+  </div>
+
+  <div class="note"><b>Two things I could not verify from the public docs:</b> the exact menu where numbers are linked, and which code an unlinked number returns. Look for it in your CircuitDigest account, and trust the code shown in the console.
+  Source: <a href="https://circuitdigest.com/article/free-sms-api-for-arduino-esp32-esp8266-nodemcu-raspberry-pi" target="_blank" rel="noopener">CircuitDigest SMS API article</a>.</div>
+</main>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+/* checklist */
+var S=[['Create a CircuitDigest Cloud account','Sign up at circuitdigest.cloud with the email you will keep.'],
+['Copy your API key','Account menu, API Key section. It is generated automatically.'],
+['Link the phone numbers that will receive SMS','Up to 5. Include the admin number and any voter you want to test with.'],
+['Put the key and admin number in secrets.h','Copy secrets.example.h to secrets.h. Use the builder on this page to write it.'],
+['Upload the sketch and open the console','Settings, SMS: switch SMS on and enter the admin phone.'],
+['Send a test SMS','SMS tab, Send test. The row should show sent with HTTP 200.']];
+var saved=[];try{saved=JSON.parse(localStorage.getItem('cd-steps')||'[]')}catch(e){}
+var ol=$('steps');
+S.forEach(function(s,i){
+  var li=document.createElement('li');
+  li.innerHTML='<input type="checkbox" id="s'+i+'"><label for="s'+i+'"><b>'+s[0]+'</b><small>'+s[1]+'</small></label>';
+  var cb=li.firstChild;cb.checked=saved.indexOf(i)>-1;
+  cb.onchange=function(){upd();};
+  ol.appendChild(li);
+});
+function upd(){
+  var n=0,keep=[];
+  ol.querySelectorAll('li').forEach(function(li,i){var c=li.firstChild.checked;li.className=c?'done':'';if(c){n++;keep.push(i)}});
+  $('pf').style.width=(n/S.length*100)+'%';$('pt').textContent=n+' / '+S.length;
+  try{localStorage.setItem('cd-steps',JSON.stringify(keep))}catch(e){}
+}
+upd();
+/* builder */
+var T={'111':'The task {var1} has been successfully completed at {var2}.','101':'Your {var1} is currently at {var2}.','107':'Error {var1} has been detected in {var2}.'};
+var tpl=$('tpl');Object.keys(T).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k+' (voter / admin / alert)'.split(' / ')[['111','101','107'].indexOf(k)].replace('(','').replace(')','')+' ';tpl.appendChild(o)});
+tpl.options[0].textContent='111 - voter';tpl.options[1].textContent='101 - admin';tpl.options[2].textContent='107 - alert';
+var mode='curl';
+function clean(s){return s.replace(/[^A-Za-z0-9 .,\-_()#:\/@&+]/g,'').trim()}
+function digits(){var d=$('ph').value.replace(/\D/g,'');return d.length>10?d.slice(-10):d}
+function lenHint(el,h){var c=clean(el.value);h.textContent=c.length+' / 30 characters'+(clean(el.value)!==el.value.trim()?' (special characters removed)':'');h.className='hint '+(c.length>30?'bad':'ok');return c.slice(0,30)}
+function render(){
+  var d=digits(),ok=d.length===10;
+  $('phh').textContent=ok?'Sent as 91'+d:'Needs 10 digits ('+d.length+' so far)';$('phh').className='hint '+(ok?'ok':'bad');
+  var a=lenHint($('v1'),$('v1h')),b=lenHint($('v2'),$('v2h'));
+  var t=tpl.value;$('tplh').textContent=T[t].replace('{var1}',a||'{var1}').replace('{var2}',b||'{var2}');
+  document.querySelectorAll('#ttab tr[data-id]').forEach(function(r){r.className=r.dataset.id===t?'sel':''});
+  var key=$('key').value.trim()||'YOUR_API_KEY',mob='91'+(d||'XXXXXXXXXX');
+  var body='{"mobiles":"'+mob+'","var1":"'+a+'","var2":"'+b+'"}';
+  var o='';
+  if(mode==='curl')o='curl -X POST "https://www.circuitdigest.cloud/api/v1/send_sms?ID='+t+'" \\\n  -H "Authorization: '+key+'" \\\n  -H "Content-Type: application/json" \\\n  -d \''+body+'\'';
+  else if(mode==='body')o=JSON.stringify(JSON.parse(body),null,2);
+  else o='// secrets.h (git-ignored)\n#pragma once\nconst char* WIFI_SSID = "your-wifi-name";\nconst char* WIFI_PASS = "your-wifi-password";\nconst char* ADMIN_USER = "admin";\nconst char* ADMIN_PASS = "change-me";\nconst char* SMS_API_KEY = "'+key+'";\nconst char* DEFAULT_ADMIN_PHONE = "'+mob+'";';
+  $('out').textContent=o;
+}
+['key','ph','v1','v2'].forEach(function(i){$(i).addEventListener('input',render)});tpl.addEventListener('change',render);
+document.querySelectorAll('#out-tabs button').forEach(function(b){b.onclick=function(){
+  mode=b.dataset.o;document.querySelectorAll('#out-tabs button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});render();};});
+$('copy').onclick=function(){
+  var txt=$('out').textContent,m=$('copied');
+  function sel(){var r=document.createRange();r.selectNodeContents($('out'));var s=getSelection();s.removeAllRanges();s.addRange(r);m.textContent='Selected. Press Ctrl+C.'}
+  try{navigator.clipboard.writeText(txt).then(function(){m.textContent='Copied'},sel)}catch(e){sel()}
+};
+render();
+</script>

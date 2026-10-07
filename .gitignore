@@ -1,3 +1,7 @@
 secrets.h
 *.bin
 build/
+.vscode/
+__pycache__/
+voting_data.json
+voting_log.txt

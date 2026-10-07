@@ -8,8 +8,8 @@ Fingerprint-based voting system on an ESP8266 (NodeMCU) with an R307/R305 finger
 
 | Design | Files | Where the logic runs |
 |---|---|---|
-| **Standalone v3 (current, enhanced)** | `voting_with_sms.ino` + `webui.h` | Everything on the NodeMCU: voter DB in LittleFS flash, web console served over WiFi |
-| Split bridge (older alternative) | `voting_bridge/voting_bridge.ino` + `voting_station.py` | NodeMCU is a USB serial bridge; a Tkinter app on the laptop holds the DB, SMS and GUI |
+| **Standalone v3 (current, enhanced)** | `firmware/voting_with_sms/` (`voting_with_sms.ino` + `webui.h`) | Everything on the NodeMCU: voter DB in LittleFS flash, web console served over WiFi |
+| Split bridge (older alternative) | `legacy/voting_bridge/voting_bridge.ino` + `legacy/voting_station.py` | NodeMCU is a USB serial bridge; a Tkinter app on the laptop holds the DB, SMS and GUI |
 
 The two designs are not compatible with each other. Unless told otherwise, "the sketch" means `voting_with_sms.ino`.
 
@@ -17,8 +17,8 @@ The two designs are not compatible with each other. Unless told otherwise, "the 
 
 - No CLI build is set up. Use the Arduino IDE: board **NodeMCU 1.0 (ESP-12E)**, Flash size **4MB (FS:1MB OTA:~1019KB)**. The LittleFS partition is required or the data won't persist (the sketch logs this on boot).
 - ESP8266 core 3.x. Libraries: Adafruit Fingerprint Sensor Library (it pulls in Adafruit BusIO). Everything else ships with the core.
-- **One sketch per folder:** `voting_bridge.ino` used to sit in this folder (it now lives in `voting_bridge/`), and the Arduino IDE concatenates every `.ino` in a folder, so building the folder fails with `redefinition of 'void loop()'`. Build `voting_with_sms.ino` from a folder that contains only it (plus `webui.h` and `types.h`), or move `voting_bridge.ino` into its own folder.
-- Full build and link check (what was used): the IDE bundles a CLI at `E:/ardiuno/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`. Run `compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M --libraries "C:/Users/ombha/OneDrive/Documents/Arduino/libraries"` on a folder with only the new sketch. Result (latest): flash 511 KB (48%), static RAM 44.7 KB (55%), IRAM 96% (fixed by the core).
+- **One sketch per folder:** `voting_bridge.ino` used to sit in this folder (it now lives in `legacy/voting_bridge/`), and the Arduino IDE concatenates every `.ino` in a folder, so building the folder fails with `redefinition of 'void loop()'`. Build `voting_with_sms.ino` from a folder that contains only it (plus `webui.h` and `types.h`), or move `voting_bridge.ino` into its own folder.
+- Full build and link check (what was used): the IDE bundles a CLI at `E:/ardiuno/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`. Run (from the repo root) `compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M --libraries "C:/Users/ombha/OneDrive/Documents/Arduino/libraries"` on `firmware/voting_with_sms`. Result (latest): flash 511 KB (48%), static RAM 44.7 KB (55%), IRAM 96% (fixed by the core).
 - Syntax check without the IDE: compile `voting_with_sms.ino` (prepend `#include <Arduino.h>`, put `webui.h` on the include path) with `xtensa-lx106-elf-g++ -fsyntax-only`, using the include dirs from `~/AppData/Local/Arduino15/packages/esp8266/hardware/esp8266/3.1.2`. The last change compiled cleanly with `-Wall -Wextra`. It was **not** run on hardware.
 - Check the web UI script on its own: extract the `<script>` body from `webui.h` and run `node --check` on it.
 - Split design: `pip install pyserial requests`, then `python voting_station.py` (`--sim` runs without hardware).

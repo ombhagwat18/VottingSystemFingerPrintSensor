@@ -12,7 +12,7 @@
 
 [Quick start](#-quick-start) · [How it works](#-how-it-works) · [Wiring](#-wiring) · [Memory](#-why-memory-looks-full) · [SMS setup](#-circuitdigest-sms-setup) · [SMS troubleshooting](#-why-the-sms-does-not-reach-a-voter) · [API](#-json-api) · [Roadmap](#-roadmap)
 
-<img src="ui_preview/ui_dash.png" alt="Admin console dashboard" width="760">
+<img src="docs/screenshots/ui_dash.png" alt="Admin console dashboard" width="760">
 
 </div>
 
@@ -32,7 +32,7 @@ A self-contained voting booth. A voter places a finger on the sensor, the board 
 | 📩 **SMS** | CircuitDigest cloud API, queued with retries, never blocks voting |
 | 🖥️ **Console** | Blue and white single-page app at `http://voting.local` |
 
-There is also an older **split design** (`voting_bridge/` + `voting_station.py`) where a laptop holds the database. It is not compatible with the standalone sketch.
+There is also an older **split design** (`legacy/`) where a laptop holds the database. It is not compatible with the standalone sketch.
 
 ---
 
@@ -41,7 +41,7 @@ There is also an older **split design** (`voting_bridge/` + `voting_station.py`)
 1. **Install** the Arduino IDE, the *ESP8266 core 3.x*, and the library **Adafruit Fingerprint Sensor Library**.
 2. **Board settings:** `NodeMCU 1.0 (ESP-12E)`, Flash size `4MB (FS:1MB OTA:~1019KB)`.
 3. **Secrets:** copy `secrets.example.h` to `secrets.h` and fill in WiFi, admin login, SMS key and admin phone. `secrets.h` is git-ignored.
-4. **Upload** `voting_with_sms.ino` (the folder must contain only this sketch, `types.h`, `webui.h`, `secrets.h`).
+4. **Open** `firmware/voting_with_sms/voting_with_sms.ino` and upload it (the folder must contain only this sketch, `types.h`, `webui.h`, `secrets.h`).
 5. Open the serial monitor at 115200 baud, then browse to `http://voting.local` (or the IP on the LCD).
 6. Register voters, press **Open election**.
 
@@ -49,7 +49,7 @@ There is also an older **split design** (`voting_bridge/` + `voting_station.py`)
 <summary>▶ Command-line build (what was used to check this repo)</summary>
 
 ```bash
-arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M voting_with_sms
+arduino-cli compile --fqbn esp8266:esp8266:nodemcuv2:eesz=4M1M firmware/voting_with_sms
 ```
 
 Last measured result: flash **511,048 / 1,048,576 B (48%)**, static RAM **44,676 / 80,192 B (55%)**, IRAM **63,455 / 65,536 B (96%)**. Compiles cleanly; **not yet run on hardware after the latest edits.**
@@ -144,7 +144,7 @@ stateDiagram-v2
 | Button 4 | D8 | 15 | Other leg to 3V3, pressed = HIGH (GPIO15 has the board's pull-down) |
 | Buzzer (active) | D0 | 16 | Other leg to GND |
 
-Diagram: [`wiring.svg`](wiring.svg)
+Diagram: [`docs/wiring.svg`](docs/wiring.svg)
 
 </details>
 
@@ -154,28 +154,49 @@ Diagram: [`wiring.svg`](wiring.svg)
 
 <table>
 <tr>
-<td><img src="ui_preview/ui_voters.png" alt="Voters" width="360"><br><sub>Voters: search, filter, edit, CSV export</sub></td>
-<td><img src="ui_preview/ui_fp.png" alt="Fingerprints" width="360"><br><sub>Fingerprints: slot map, verify, test a finger</sub></td>
+<td><img src="docs/screenshots/ui_voters.png" alt="Voters" width="360"><br><sub>Voters: search, filter, edit, CSV export</sub></td>
+<td><img src="docs/screenshots/ui_fp.png" alt="Fingerprints" width="360"><br><sub>Fingerprints: slot map, verify, test a finger</sub></td>
 </tr>
 <tr>
-<td><img src="ui_preview/ui_sms.png" alt="SMS" width="360"><br><sub>SMS: status, attempts and HTTP code per message</sub></td>
-<td><img src="ui_preview/ui_set.png" alt="Settings" width="360"><br><sub>Settings: candidates, timeouts, SMS switches</sub></td>
+<td><img src="docs/screenshots/ui_sms.png" alt="SMS" width="360"><br><sub>SMS: status, attempts and HTTP code per message</sub></td>
+<td><img src="docs/screenshots/ui_set.png" alt="Settings" width="360"><br><sub>Settings: candidates, timeouts, SMS switches</sub></td>
 </tr>
 </table>
 
 ---
 
+## 🧩 Repository structure
+
+```
+.
+├── firmware/
+│   └── voting_with_sms/        <- open this folder in the Arduino IDE
+│       ├── voting_with_sms.ino    main firmware
+│       ├── types.h                shared types
+│       ├── webui.h                admin console (PROGMEM page)
+│       ├── secrets.example.h      credentials template
+│       └── secrets.h              YOUR credentials (git-ignored)
+├── legacy/                     older split design (not compatible)
+│   ├── voting_bridge/voting_bridge.ino
+│   └── voting_station.py
+├── docs/
+│   ├── wiring.svg
+│   ├── circuitdigest-setup.html   open in a browser
+│   └── screenshots/
+├── README.md · CLAUDE.md · .gitignore
+```
+
 ## 🧩 Code layout
 
 | File | Role |
 |---|---|
-| [`voting_with_sms.ino`](voting_with_sms.ino) | Firmware: storage, SMS queue, sensor, enrollment, station, JSON API, setup/loop |
-| [`types.h`](types.h) | `SmsJob`, `SmsStatus`, `EnrStep` (needed before the auto-generated prototypes) |
-| [`webui.h`](webui.h) | Whole console as one PROGMEM string (served from flash, not RAM) |
-| [`secrets.example.h`](secrets.example.h) | Template for credentials. Copy to `secrets.h` |
+| [`voting_with_sms.ino`](firmware/voting_with_sms/voting_with_sms.ino) | Firmware: storage, SMS queue, sensor, enrollment, station, JSON API, setup/loop |
+| [`types.h`](firmware/voting_with_sms/types.h) | `SmsJob`, `SmsStatus`, `EnrStep` (needed before the auto-generated prototypes) |
+| [`webui.h`](firmware/voting_with_sms/webui.h) | Whole console as one PROGMEM string (served from flash, not RAM) |
+| [`secrets.example.h`](firmware/voting_with_sms/secrets.example.h) | Template for credentials. Copy to `secrets.h` |
 | `secrets.h` | Your real credentials. **Git-ignored, never commit it** |
-| [`wiring.svg`](wiring.svg), [`ui_preview/`](ui_preview) | Wiring diagram and console screenshots |
-| [`voting_bridge/`](voting_bridge/voting_bridge.ino), [`voting_station.py`](voting_station.py) | Older split design (serial bridge + Tkinter app) |
+| [`docs/wiring.svg`](docs/wiring.svg), [`docs/screenshots/`](docs/screenshots) | Wiring diagram and console screenshots |
+| [`legacy/voting_bridge/`](legacy/voting_bridge/voting_bridge.ino), [`legacy/voting_station.py`](legacy/voting_station.py) | Older split design (serial bridge + Tkinter app) |
 | [`CLAUDE.md`](CLAUDE.md) | Notes for AI assistants working in this repo |
 
 <details>
