@@ -84,7 +84,7 @@ a{color:var(--blue);font-weight:700}
       <div class="field"><label for="v2">var2</label><input type="text" id="v2" value="Voting Booth 1 08-Oct 10:00" maxlength="60"><span class="hint" id="v2h"></span></div>
       <div class="tabs" id="out-tabs" role="group" aria-label="Output format">
         <button type="button" data-o="curl" aria-pressed="true">curl test</button>
-        <button type="button" data-o="secrets" aria-pressed="false">secrets.h</button>
+        <button type="button" data-o="secrets" aria-pressed="false">config.json</button>
         <button type="button" data-o="body" aria-pressed="false">JSON body</button>
       </div>
       <pre id="out" tabindex="0"></pre>
@@ -112,17 +112,17 @@ a{color:var(--blue);font-weight:700}
         <tr data-id="101"><td class="mono">101</td><td>Admin, each vote and tests</td><td>Your {var1} is currently at {var2}.</td></tr>
         <tr data-id="107"><td class="mono">107</td><td>Admin alert</td><td>Error {var1} has been detected in {var2}.</td></tr>
       </table></div>
-      <p class="hint" style="margin-top:8px">CircuitDigest offers 15 templates (101 to 115). To change wording, edit <code>smsOnVote</code>, <code>smsOnRegister</code> and <code>smsAlert</code> in the sketch.</p>
+      <p class="hint" style="margin-top:8px">CircuitDigest offers 15 templates (101 to 115). To change wording, edit <code>sms_on_vote</code>, <code>sms_on_register</code> and <code>sms_alert</code> in <code>server/vs/core.py</code>.</p>
     </section>
 
     <section class="card" aria-labelledby="h-err">
       <h2 id="h-err">If it fails</h2>
       <div class="scroll"><table>
         <tr><th>Code</th><th>Meaning</th><th>Fix</th></tr>
-        <tr><td><span class="tag bad">401</span></td><td>API key missing or wrong</td><td>Copy the key again into <code>secrets.h</code> and re-upload</td></tr>
+        <tr><td><span class="tag bad">401</span></td><td>API key missing or wrong</td><td>Copy the key again into <code>server/config.json</code> and restart the server</td></tr>
         <tr><td><span class="tag bad">403</span></td><td>Request limit reached</td><td>Wait for the monthly reset, or save quota</td></tr>
         <tr><td><span class="tag w">400</span></td><td>Missing or rejected field</td><td>Check number, template ID and variable length</td></tr>
-        <tr><td><span class="tag w">-1, -5</span></td><td>Connection or TLS failed</td><td>Check WiFi and the free-heap numbers in the console</td></tr>
+        <tr><td><span class="tag w">0</span></td><td>Connection or TLS failed</td><td>Check the PC's internet connection</td></tr>
       </table></div>
       <p class="hint" style="margin-top:8px">The console's SMS tab shows the code and last response for every message.</p>
     </section>
@@ -138,8 +138,8 @@ var $=function(i){return document.getElementById(i)};
 var S=[['Create a CircuitDigest Cloud account','Sign up at circuitdigest.cloud with the email you will keep.'],
 ['Copy your API key','Account menu, API Key section. It is generated automatically.'],
 ['Link the phone numbers that will receive SMS','Up to 5. Include the admin number and any voter you want to test with.'],
-['Put the key and admin number in secrets.h','Copy secrets.example.h to secrets.h. Use the builder on this page to write it.'],
-['Upload the sketch and open the console','Settings, SMS: switch SMS on and enter the admin phone.'],
+['Put the key and admin number in server/config.json','setup.bat asks for them, or copy config.example.json to config.json. The builder on this page writes it.'],
+['Start the server and open the dashboard','start.bat, then Settings, SMS: switch SMS on and check the admin phone.'],
 ['Send a test SMS','SMS tab, Send test. The row should show sent with HTTP 200.']];
 var saved=[];try{saved=JSON.parse(localStorage.getItem('cd-steps')||'[]')}catch(e){}
 var ol=$('steps');
@@ -176,7 +176,17 @@ function render(){
   var o='';
   if(mode==='curl')o='curl -X POST "https://www.circuitdigest.cloud/api/v1/send_sms?ID='+t+'" \\\n  -H "Authorization: '+key+'" \\\n  -H "Content-Type: application/json" \\\n  -d \''+body+'\'';
   else if(mode==='body')o=JSON.stringify(JSON.parse(body),null,2);
-  else o='// secrets.h (git-ignored)\n#pragma once\nconst char* WIFI_SSID = "your-wifi-name";\nconst char* WIFI_PASS = "your-wifi-password";\nconst char* ADMIN_USER = "admin";\nconst char* ADMIN_PASS = "change-me";\nconst char* SMS_API_KEY = "'+key+'";\nconst char* DEFAULT_ADMIN_PHONE = "'+mob+'";';
+  else o='{
+  "admin_user": "admin",
+  "admin_pass": "change-me",
+  "api_key": "'+key+'",
+  "admin_phone": "'+mob+'",
+  "http_port": 8080,
+  "bind": "0.0.0.0",
+  "serial_port": "auto",
+  "booth": "Voting Booth 1",
+  "max_id": 127
+}';
   $('out').textContent=o;
 }
 ['key','ph','v1','v2'].forEach(function(i){$(i).addEventListener('input',render)});tpl.addEventListener('change',render);

@@ -1,8 +1,10 @@
 @echo off
 rem ============================================================
 rem  Fingerprint Voting System - one-click setup (Windows)
-rem  1. gets arduino-cli   2. installs ESP8266 core + libraries
-rem  3. writes secrets.h   4. compiles   5. uploads   6. opens the console
+rem  1. Python            2. server packages
+rem  3. arduino-cli + ESP8266 core + library
+rem  4. compile the NodeMCU firmware   5. upload it
+rem  6. write server\config.json, start the server, open the dashboard
 rem  Re-run any time; finished steps are skipped.
 rem ============================================================
 setlocal EnableExtensions
@@ -10,30 +12,77 @@ title Voting System Setup
 cd /d "%~dp0"
 
 set "ROOT=%~dp0"
-set "SKETCH=%ROOT%firmware\voting_with_sms"
-set "SECRETS=%SKETCH%\secrets.h"
+set "SKETCH=%ROOT%firmware\voting_bridge"
+set "CONFIG=%ROOT%server\config.json"
+set "VENV=%ROOT%.venv"
 set "TOOLS=%ROOT%tools"
 set "FQBN=esp8266:esp8266:nodemcuv2:eesz=4M1M"
 set "CORE=esp8266:esp8266@3.1.2"
 set "ESP_URL=https://arduino.esp8266.com/stable/package_esp8266com_index.json"
 set "CLI="
+set "PYEXE="
 set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 if not exist "%PS%" set "PS=pwsh"
 
 echo.
 echo  ===== Fingerprint Voting System : setup =====
+echo   The NodeMCU only reads the sensor and buttons.
+echo   This PC runs the database, SMS and the web dashboard.
 echo.
 
-if not exist "%SKETCH%\voting_with_sms.ino" (
-  echo [X] Cannot find %SKETCH%\voting_with_sms.ino
+if not exist "%SKETCH%\voting_bridge.ino" (
+  echo [X] Cannot find %SKETCH%\voting_bridge.ino
   echo     Run this file from the repository root.
   goto :fail
 )
 
-rem ---------- 1. arduino-cli ----------
-echo [1/6] Looking for arduino-cli...
+rem ---------- 1. Python ----------
+echo [1/6] Looking for Python 3.8 or newer...
+call :findpython
+if not defined PYEXE (
+  echo       Python was not found.
+  where winget >nul 2>&1
+  if errorlevel 1 (
+    echo [X] Install Python from https://www.python.org/downloads/ ^(tick "Add python.exe to PATH"^) and run setup.bat again.
+    goto :fail
+  )
+  set "ANS=Y"
+  set /p "ANS=      Install Python 3.12 now with winget? [Y/n]: "
+  if /i "%ANS%"=="N" goto :fail
+  winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+  call :findpython
+  if not defined PYEXE (
+    echo.
+    echo       Python is installed, but this window cannot see it yet.
+    echo       Close this window and run setup.bat again.
+    goto :fail
+  )
+)
+echo       Using: %PYEXE%
+
+rem ---------- 2. server packages ----------
+echo.
+echo [2/6] Installing the server packages ^(pyserial^)...
+if not exist "%VENV%\Scripts\python.exe" (
+  "%PYEXE%" -m venv "%VENV%"
+  if errorlevel 1 (
+    echo [X] Could not create the Python environment.
+    goto :fail
+  )
+)
+"%VENV%\Scripts\python.exe" -m pip install --disable-pip-version-check -q -r "%ROOT%server\requirements.txt"
+if errorlevel 1 (
+  echo [X] pip install failed. Check your internet connection.
+  goto :fail
+)
+echo       Done.
+
+rem ---------- 3. arduino-cli, ESP8266 core, library ----------
+echo.
+echo [3/6] Looking for arduino-cli...
 where arduino-cli >nul 2>&1 && set "CLI=arduino-cli"
 if not defined CLI if exist "%TOOLS%\arduino-cli.exe" set "CLI=%TOOLS%\arduino-cli.exe"
+if not defined CLI if exist "%LOCALAPPDATA%\Programs\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe" set "CLI=%LOCALAPPDATA%\Programs\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe"
 if not defined CLI (
   echo       Not found. Downloading the official build from arduino.cc ...
   if not exist "%TOOLS%" mkdir "%TOOLS%"
@@ -46,47 +95,18 @@ if not defined CLI (
   goto :fail
 )
 echo       Using: %CLI%
-
-rem ---------- 2. ESP8266 core + libraries ----------
-echo.
-echo [2/6] Installing the ESP8266 board package (first time is about 300 MB)...
+echo       Installing the ESP8266 board package ^(first time is about 300 MB^)...
 "%CLI%" config add board_manager.additional_urls %ESP_URL% >nul 2>&1
 "%CLI%" core update-index
 if errorlevel 1 goto :fail
 "%CLI%" core install %CORE%
 if errorlevel 1 goto :fail
-
-echo.
-echo       Installing libraries...
 "%CLI%" lib install "Adafruit Fingerprint Sensor Library"
 if errorlevel 1 goto :fail
 
-rem ---------- 3. secrets.h ----------
-echo.
-echo [3/6] Credentials (stored only in secrets.h, which git ignores)
-if not exist "%SECRETS%" goto :ask_secrets
-set "WRITE_SECRETS=N"
-set /p "WRITE_SECRETS=      secrets.h already exists. Replace it? [y/N]: "
-if /i not "%WRITE_SECRETS%"=="Y" goto :after_secrets
-
-:ask_secrets
-set "VS_ADMIN=admin"
-set /p "VS_SSID=      WiFi name (2.4 GHz)        : "
-set /p "VS_WIFIPASS=      WiFi password              : "
-set /p "VS_ADMIN=      Console username [admin]   : "
-set /p "VS_ADMINPASS=      Console password           : "
-set /p "VS_APIKEY=      CircuitDigest API key      : "
-set /p "VS_PHONE=      Admin phone (10 digits)    : "
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\make-secrets.ps1" -Out "%SECRETS%"
-if errorlevel 1 goto :fail
-goto :after_secrets
-
-:after_secrets
-echo       secrets.h is ready.
-
 rem ---------- 4. compile ----------
 echo.
-echo [4/6] Compiling the firmware...
+echo [4/6] Compiling the NodeMCU firmware ^(firmware\voting_bridge^)...
 "%CLI%" compile --fqbn %FQBN% "%SKETCH%"
 if errorlevel 1 (
   echo [X] Compile failed. Read the first error above.
@@ -101,47 +121,69 @@ echo.
 "%CLI%" board list
 echo.
 set "PORT="
-set /p "PORT=      Type the COM port (for example COM3), or press Enter to skip: "
+set /p "PORT=      Type the COM port (for example COM3), or press Enter to skip the upload: "
 if not "%PORT%"=="" (
   "%CLI%" upload -p %PORT% --fqbn %FQBN% "%SKETCH%"
   if errorlevel 1 (
-    echo [X] Upload failed. Check the cable, the COM port, and close the Serial Monitor.
+    echo [X] Upload failed. Check the cable and the COM port, and close the Serial Monitor.
     goto :fail
   )
-  echo       Uploaded. Waiting 20 s for the board to join WiFi...
-  timeout /t 20 /nobreak >nul
+  echo       Uploaded.
 ) else (
-  echo       Skipped. Upload later with:  "%CLI%" upload -p COMx --fqbn %FQBN% firmware\voting_with_sms
+  echo       Skipped. Upload later with:  "%CLI%" upload -p COMx --fqbn %FQBN% firmware\voting_bridge
+  echo       The server finds the NodeMCU on USB by itself.
 )
 
-rem ---------- optional: legacy Python app ----------
+rem ---------- 6. config, firewall, start ----------
 echo.
-set "PY="
-set /p "PY=      Also install the older laptop-GUI version (Python)? [y/N]: "
-if /i "%PY%"=="Y" (
-  where python >nul 2>&1
-  if errorlevel 1 (
-    echo       Python not found. Install it from https://www.python.org/downloads/ and re-run.
-  ) else (
-    python -m pip install --upgrade pyserial requests
-  )
+echo [6/6] Server settings ^(stored only in server\config.json, which git ignores^)
+if not exist "%CONFIG%" goto :ask_config
+set "REPLACE=N"
+set /p "REPLACE=      config.json already exists. Replace it? [y/N]: "
+if /i not "%REPLACE%"=="Y" goto :after_config
+
+:ask_config
+set "VS_ADMIN=admin"
+set /p "VS_ADMIN=      Dashboard username [admin]  : "
+set /p "VS_ADMINPASS=      Dashboard password          : "
+set /p "VS_APIKEY=      CircuitDigest API key       : "
+set /p "VS_PHONE=      Admin phone (10 digits)     : "
+set "VS_PORT=%PORT%"
+"%PS%" -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\make-config.ps1" -Out "%CONFIG%"
+if errorlevel 1 goto :fail
+
+:after_config
+echo.
+set "FW=Y"
+set /p "FW=      Let phones and laptops on your WiFi open the dashboard? (adds a Windows Firewall rule) [Y/n]: "
+if /i not "%FW%"=="N" (
+  "%PS%" -NoProfile -ExecutionPolicy Bypass -Command "Start-Process netsh -Verb RunAs -Wait -ArgumentList 'advfirewall firewall add rule name=VotingDashboard dir=in action=allow protocol=TCP localport=8080 profile=private'"
 )
 
-rem ---------- 6. open the system ----------
 echo.
-echo [6/6] Opening the admin console and the setup guide...
-start "" "%ROOT%docs\circuitdigest-setup.html"
-if not "%PORT%"=="" (
-  echo       Console: http://voting.local   ^(or the IP shown on the LCD / serial monitor^)
-  start "" "http://voting.local"
-)
+echo       Starting the server in a new window...
+start "Voting Server" "%ROOT%start.bat"
+timeout /t 4 /nobreak >nul
+start "" "http://localhost:8080"
 
 echo.
 echo  ===== Done =====
-echo  Console login is the username and password you entered.
-echo  If voting.local does not open, use the IP address shown on the LCD.
+echo  Dashboard : http://localhost:8080   ^(other devices: the address shown in the Voting Server window^)
+echo  Login     : the dashboard username and password you entered
+echo  Next time : double-click start.bat
+echo  Plug the NodeMCU into this PC with the USB cable and keep it plugged in while voting.
 echo.
 pause
+exit /b 0
+
+:findpython
+set "PYEXE="
+for %%P in (python py) do (
+  if not defined PYEXE (
+    %%P -c "import sys; sys.exit(0 if sys.version_info[:2] >= (3, 8) else 1)" >nul 2>&1
+    if not errorlevel 1 set "PYEXE=%%P"
+  )
+)
 exit /b 0
 
 :fail

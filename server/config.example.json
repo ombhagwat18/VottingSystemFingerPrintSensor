@@ -1,0 +1,11 @@
+{
+  "admin_user": "admin",
+  "admin_pass": "change-me",
+  "api_key": "your-circuitdigest-api-key",
+  "admin_phone": "91XXXXXXXXXX",
+  "http_port": 8080,
+  "bind": "0.0.0.0",
+  "serial_port": "auto",
+  "booth": "Voting Booth 1",
+  "max_id": 127
+}
